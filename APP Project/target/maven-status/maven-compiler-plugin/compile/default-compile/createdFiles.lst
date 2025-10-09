@@ -1,0 +1,10 @@
+com/janseva/JansevaApplication.class
+com/janseva/service/ComplaintService.class
+com/janseva/controller/ComplaintController.class
+com/janseva/model/Complaint.class
+com/janseva/repository/UserRepository.class
+com/janseva/dto/ComplaintDTO.class
+com/janseva/config/CorsConfig.class
+com/janseva/controller/UserController.class
+com/janseva/repository/ComplaintRepository.class
+com/janseva/model/User.class

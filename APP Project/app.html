@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Janseva | Report an Issue</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+  <style>
+    body { background:#f8f9fa; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+    .navbar { background:#0db9fd; color:#fff; font-weight:700; }
+    .container-flex { display:flex; gap:20px; margin:20px; flex-wrap:wrap; }
+    #map { flex:2; height:600px; border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.08); min-width:400px; }
+    .form-card { flex:1; background:#fff; border-radius:10px; padding:20px; box-shadow:0 4px 8px rgba(0,0,0,0.06); min-width:320px; }
+    .status { display:none; margin-top:10px; padding:10px; border-radius:6px; }
+    .status.success { background:#d1e7dd; color:#0f5132; }
+    .status.error { background:#f8d7da; color:#842029; }
+    img.complaint-photo { width:100%; max-height:150px; margin-top:8px; border-radius:6px; object-fit:cover; }
+    .small-muted { font-size:0.9rem; color:#6c757d; }
+  </style>
+
+  <!-- Google Maps script loaded with callback (initMap must be global) -->
+  <script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCD-24B04aO6cFngr0ztZ5GH0XB8KQ98-A&callback=initMap" async defer></script>
+</head>
+<body>
+  <nav class="navbar p-3">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h1 text-white">Janseva — Report an Issue</span>
+    </div>
+  </nav>
+
+  <div class="container-flex">
+    <div id="map">Loading map…</div>
+
+    <div class="form-card">
+      <h4 class="mb-3 text-center">File a New Complaint</h4>
+
+      <label class="form-label">Description</label>
+      <textarea id="desc" class="form-control mb-3" rows="4" placeholder="Describe the issue..."></textarea>
+
+      <label class="form-label">Upload Photo (optional) <span class="small-muted">(max 5MB)</span></label>
+      <input type="file" id="photo" class="form-control mb-3" accept="image/*" />
+
+      <button id="submitBtn" class="btn btn-success w-100 mb-2">Submit Complaint</button>
+
+      <div id="status" class="status"></div>
+
+      <hr />
+      <h5 class="text-center mt-3">Submitted Complaints</h5>
+      <ul id="complaintList" class="list-group mt-2"></ul>
+    </div>
+  </div>
+
+<script>
+/* ------------- Configuration & state ------------- */
+const DEFAULT_CENTER = { lat: 13.0827, lng: 80.2707 }; // Chennai fallback
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+let map = null;
+let heatmap = null;
+const markers = [];
+const complaints = JSON.parse(localStorage.getItem('complaints') || '[]');
+
+/* Expose initMap globally for Google Maps callback */
+window.initMap = function initMap() {
+  try {
+    map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 13,
+      center: DEFAULT_CENTER,
+      mapTypeId: 'roadmap',
+      styles: [
+        { elementType: 'geometry', stylers: [{ color: '#ebe3cd' }] },
+        { elementType: 'labels.text.fill', stylers: [{ color: '#523735' }] },
+        { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f1e6' }] },
+        { featureType: 'water', stylers: [{ color: '#b9d3c2' }] }
+      ]
+    });
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => map.setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {} // ignore error: we'll use fallback center
+      );
+    }
+
+    // initial render
+    refreshMarkers();
+  } catch (err) {
+    console.error('initMap error', err);
+    document.getElementById('map').innerText = 'Map failed to load. Check console and API key.';
+  }
+};
+
+/* ------------- Helpers ------------- */
+function showStatus(msg, type = 'success') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = `status ${type}`;
+  el.style.display = 'block';
+  // auto-hide success after 4s
+  if (type === 'success') setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+function hideStatus() {
+  const el = document.getElementById('status');
+  el.style.display = 'none';
+}
+
+function isGoogleMapsAvailable() {
+  return typeof window.google !== 'undefined' && window.google && window.google.maps;
+}
+
+function safeLocalStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (err) {
+    console.error('localStorage.setItem failed', err);
+    return false;
+  }
+}
+
+/* Async geolocation with timeout + fallback */
+function getPositionWithTimeout(timeoutMs = 5000) {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({ coords: { latitude: DEFAULT_CENTER.lat, longitude: DEFAULT_CENTER.lng }, fallback: true });
+      return;
+    }
+
+    let resolved = false;
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        resolve({ coords: { latitude: DEFAULT_CENTER.lat, longitude: DEFAULT_CENTER.lng }, fallback: true, error: 'timeout' });
+      }
+    }, timeoutMs);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          resolve({ coords: pos.coords, fallback: false });
+        }
+      },
+      (err) => {
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          console.warn('geolocation error', err);
+          resolve({ coords: { latitude: DEFAULT_CENTER.lat, longitude: DEFAULT_CENTER.lng }, fallback: true, error: err && err.message });
+        }
+      },
+      { enableHighAccuracy: false, timeout: timeoutMs, maximumAge: 0 }
+    );
+  });
+}
+
+/* Read image file as data URL with size-check */
+function readFileAsDataURLWithChecks(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve('');
+    if (file.size > MAX_IMAGE_BYTES) {
+      return reject(new Error('File too large (max 5MB).'));
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (e) => {
+      console.error('FileReader error', e);
+      reject(new Error('Failed to read image.'));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ------------- Map / UI rendering ------------- */
+function clearMarkers() {
+  markers.forEach(m => m.setMap(null));
+  markers.length = 0;
+}
+
+function buildHeatmap() {
+  if (!isGoogleMapsAvailable()) return;
+  const heatData = complaints.map(c => new google.maps.LatLng(c.lat, c.lng));
+  if (heatmap) heatmap.setMap(null);
+  heatmap = new google.maps.visualization.HeatmapLayer({ data: heatData, radius: 30 });
+  heatmap.setMap(map);
+}
+
+function buildMarkers() {
+  if (!isGoogleMapsAvailable()) return;
+  clearMarkers();
+  complaints.forEach((c, i) => {
+    try {
+      const marker = new google.maps.Marker({
+        position: { lat: c.lat, lng: c.lng },
+        map,
+        title: c.desc
+      });
+      marker.addListener('click', () => {
+        map.panTo(marker.getPosition());
+        showStatus(`Complaint #${i+1}: ${c.desc}`, 'success');
+      });
+      markers.push(marker);
+    } catch (err) {
+      console.error('marker build error', err);
+    }
+  });
+}
+
+function renderComplaintList() {
+  const list = document.getElementById('complaintList');
+  list.innerHTML = '';
+
+  if (!complaints.length) {
+    list.innerHTML = '<li class="list-group-item text-center text-muted">No complaints yet</li>';
+    return;
+  }
+
+  complaints.forEach((c, i) => {
+    const li = document.createElement('li');
+    li.className = 'list-group-item d-flex flex-column';
+
+    const descHtml = document.createElement('div');
+    descHtml.innerHTML = `<strong>${i+1}. ${escapeHtml(c.desc)}</strong><br>📍 ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}${c.photo ? `<br><img src="${c.photo}" class="complaint-photo" alt="photo">` : ''}`;
+    li.appendChild(descHtml);
+
+    const btnRow = document.createElement('div');
+    btnRow.className = 'mt-2 d-flex justify-content-between';
+
+    const centerBtn = document.createElement('button');
+    centerBtn.className = 'btn btn-sm btn-primary';
+    centerBtn.textContent = 'Center on Map';
+    centerBtn.onclick = () => {
+      if (isGoogleMapsAvailable() && map) {
+        map.panTo({ lat: c.lat, lng: c.lng });
+        map.setZoom(15);
+      } else {
+        showStatus('Map not available to center.', 'error');
+      }
+    };
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn btn-sm btn-danger';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.onclick = () => {
+      if (!confirm('Delete this complaint?')) return;
+      complaints.splice(i, 1);
+      if (!safeLocalStorageSet('complaints', JSON.stringify(complaints))) {
+        showStatus('Deleted locally but failed to update storage.', 'error');
+      } else {
+        showStatus('Complaint deleted.', 'success');
+      }
+      refreshMarkers();
+    };
+
+    btnRow.appendChild(centerBtn);
+    btnRow.appendChild(deleteBtn);
+    li.appendChild(btnRow);
+    list.appendChild(li);
+  });
+
+  const clearAll = document.createElement('button');
+  clearAll.className = 'btn btn-outline-danger w-100 mt-3';
+  clearAll.textContent = 'Clear All Complaints';
+  clearAll.onclick = () => {
+    if (!confirm('Are you sure you want to clear all complaints?')) return;
+    complaints.length = 0;
+    const ok = safeLocalStorageSet('complaints', JSON.stringify(complaints));
+    showStatus(ok ? 'All complaints cleared.' : 'Cleared in memory, storage update failed.', ok ? 'success' : 'error');
+    refreshMarkers();
+  };
+  list.appendChild(clearAll);
+}
+
+/* Main refresh that updates map & list */
+function refreshMarkers() {
+  try {
+    if (isGoogleMapsAvailable() && map) {
+      buildHeatmap();
+      buildMarkers();
+    } else {
+      console.warn('Google Maps not available — skipping heatmap/markers');
+    }
+    renderComplaintList();
+  } catch (err) {
+    console.error('refreshMarkers failed', err);
+    showStatus('Failed to update map/list. See console.', 'error');
+  }
+}
+
+/* ------------- Submission logic (robust) ------------- */
+document.getElementById('submitBtn').addEventListener('click', async function onSubmit(e) {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  hideStatus();
+
+  try {
+    const descEl = document.getElementById('desc');
+    const photoEl = document.getElementById('photo');
+    const desc = (descEl.value || '').trim();
+
+    if (!desc) {
+      showStatus('Please enter a description.', 'error');
+      return;
+    }
+
+    // 1) get position with timeout & fallback
+    const pos = await getPositionWithTimeout(5000);
+    const lat = Number(pos.coords.latitude) || DEFAULT_CENTER.lat;
+    const lng = Number(pos.coords.longitude) || DEFAULT_CENTER.lng;
+
+    // 2) read image (if any) with checks
+    let photoData = '';
+    if (photoEl.files && photoEl.files.length > 0) {
+      const file = photoEl.files[0];
+      try {
+        photoData = await readFileAsDataURLWithChecks(file);
+      } catch (fileErr) {
+        console.warn('Image read skipped:', fileErr);
+        // do not abort submit; allow submission without image
+        showStatus('Image skipped: ' + fileErr.message + ' — complaint submitted without image.', 'error');
+      }
+    }
+
+    // 3) push to memory + persist
+    const entry = { id: Date.now(), desc, lat, lng, photo: photoData, createdAt: new Date().toISOString() };
+    complaints.push(entry);
+
+    if (!safeLocalStorageSet('complaints', JSON.stringify(complaints))) {
+      // if localStorage fails (quota or disabled), still continue but inform user
+      console.warn('localStorage set failed after adding complaint');
+      showStatus('Complaint saved in memory but could not be persisted (storage full or disabled).', 'error');
+    } else {
+      showStatus('Complaint submitted successfully!', 'success');
+    }
+
+    // reset form
+    descEl.value = '';
+    photoEl.value = '';
+
+    // redraw
+    refreshMarkers();
+  } catch (err) {
+    console.error('Submit handler error', err);
+    showStatus('Unexpected error while submitting: ' + (err && err.message ? err.message : String(err)), 'error');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* simple HTML-escape helper to avoid XSS when rendering user descriptions */
+function escapeHtml(text) {
+  if (!text) return '';
+  return text.replace(/[&<>"']/g, (m) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m]);
+}
+
+/* Initialize UI from storage on load — if map not ready yet, refreshMarkers guards */
+(function boot() {
+  try {
+    // ensure stored complaints is an array (defensive)
+    if (!Array.isArray(complaints)) {
+      console.warn('complaints in storage was not an array; resetting');
+      complaints.length = 0;
+      safeLocalStorageSet('complaints', JSON.stringify(complaints));
+    }
+    // render list immediately (map may follow when Google calls initMap)
+    renderComplaintList();
+  } catch (err) {
+    console.error('Boot error', err);
+  }
+})();
+</script>
+</body>
+</html>

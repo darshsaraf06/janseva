@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 JanSeva: Smart Civic Issue Resolver</title>
+    <link rel="icon" type="image/png" href="janseva_logo.JPEG">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            /*for the dark coloured them of the site*/
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-card: #1c2128;
+            --bg-modal: #1c2128;
+            
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            
+            --accent-primary: #58a6ff;
+            --accent-secondary: #f72355;
+            --accent-success: #3fb950;
+            --accent-warning: #d29922;
+            --accent-danger: #f85149;
+            --accent-info: #79c0ff;
+            
+            --border-primary: #30363d;
+            --border-secondary: #21262d;
+            
+            --shadow-light: rgba(0, 0, 0, 0.3);
+            --shadow-medium: rgba(0, 0, 0, 0.5);
+            --shadow-heavy: rgba(0, 0, 0, 0.7);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body { 
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+        }
+        
+        .navbar {
+            background: var(--bg-secondary) !important;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 2px 20px var(--shadow-medium);
+            border-bottom: 1px solid var(--border-primary);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--accent-primary) !important;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
+        }
+        
+        .navbar .btn-outline-light {
+            border-color: var(--border-primary);
+            color: var(--text-primary);
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar .btn-outline-light:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: var(--bg-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(88, 166, 255, 0.3);
+        }
+        
+        .main-container {
+            margin-top: 2rem;
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px var(--shadow-medium);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-primary);
+        }
+        
+        #map { 
+            height: 600px; 
+            width: 100%; 
+            border-radius: 15px;
+            box-shadow: 0 5px 20px var(--shadow-medium);
+            border: 1px solid var(--border-primary);
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 15px;
+            box-shadow: 0 5px 20px var(--shadow-light);
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px var(--shadow-medium);
+            border-color: var(--accent-primary);
+        }
+        
+        .card-title {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .form-control, .form-select {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-primary);
+            border-radius: 10px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.25);
+            color: var(--text-primary);
+        }
+        
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .form-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .btn {
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--text-primary);
+            box-shadow: 0 4px 15px rgba(88, 166, 255, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.4);
+            background: linear-gradient(45deg, #4d9eff, #6d28d9);
+        }
+        
+        .btn-success {
+            background: linear-gradient(45deg, var(--accent-success), #22c55e);
+            color: var(--text-primary);
+            box-shadow: 0 4px 15px rgba(63, 185, 80, 0.3);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(63, 185, 80, 0.4);
+            background: linear-gradient(45deg, #2ea043, #16a34a);
+        }
+        
+        .btn-outline-light {
+            border-color: var(--border-primary);
+            color: var(--text-primary);
+            background: transparent;
+        }
+        
+        .btn-outline-light:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: var(--text-primary);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 30px rgba(88, 166, 255, 0.2);
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .filter-section {
+            background: var(--bg-tertiary);
+            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-primary);
+        }
+        
+        .complaint-item {
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 2px 10px var(--shadow-light);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-secondary);
+        }
+        
+        .complaint-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px var(--shadow-medium);
+            border-color: var(--accent-primary);
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-open { 
+            background-color: rgba(210, 153, 34, 0.2); 
+            color: var(--accent-warning); 
+            border: 1px solid var(--accent-warning);
+        }
+        .status-in-progress { 
+            background-color: rgba(121, 192, 255, 0.2); 
+            color: var(--accent-info); 
+            border: 1px solid var(--accent-info);
+        }
+        .status-resolved { 
+            background-color: rgba(63, 185, 80, 0.2); 
+            color: var(--accent-success); 
+            border: 1px solid var(--accent-success);
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px var(--shadow-light);
+        }
+        
+        .alert-info {
+            background: rgba(121, 192, 255, 0.1);
+            color: var(--accent-info);
+            border: 1px solid var(--accent-info);
+        }
+        
+        .alert-success {
+            background: rgba(63, 185, 80, 0.1);
+            color: var(--accent-success);
+            border: 1px solid var(--accent-success);
+        }
+        
+        .alert-danger {
+            background: rgba(248, 81, 73, 0.1);
+            color: var(--accent-danger);
+            border: 1px solid var(--accent-danger);
+        }
+        
+        .alert-warning {
+            background: rgba(210, 153, 34, 0.1);
+            color: var(--accent-warning);
+            border: 1px solid var(--accent-warning);
+        }
+        
+        .modal-content {
+            background: var(--bg-modal);
+            border: 1px solid var(--border-primary);
+            border-radius: 15px;
+            box-shadow: 0 20px 60px var(--shadow-heavy);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid var(--border-primary);
+            background: var(--bg-secondary);
+        }
+        
+        .modal-title {
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            background: var(--bg-modal);
+            color: var(--text-primary);
+        }
+        
+        .btn-close {
+            filter: invert(1);
+        }
+        
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+        
+        .text-center {
+            color: var(--text-primary);
+        }
+        
+        .badge {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            font-weight: 600;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 5px 20px var(--shadow-medium);
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-secondary);
+        }
+        
+        /* Loading Spinner */
+        .fa-spinner {
+            color: var(--accent-primary);
+        }
+        
+        /* Links */
+        a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        a:hover {
+            color: var(--accent-secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+            
+            #map {
+                height: 400px;
+            }
+        }
+        
+        /* Dark theme for Google Maps */
+        .gm-style {
+            filter: invert(1) hue-rotate(180deg);
+        }
+        
+        .gm-style .gm-style-iw-c {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-primary) !important;
+        }
+        
+        .gm-style .gm-style-iw-d {
+            color: var(--text-primary) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">🚀 JanSeva: Smart Civic Issue Resolver</a>
+            <div class="d-flex align-items-center">
+                <div id="userInfo" class="text-white me-3" style="display: none;">
+                    <span id="welcomeText"></span>
+                    <span class="badge bg-success ms-2" id="userPoints"></span>
+                </div>
+                <button class="btn btn-outline-light btn-sm" id="themeToggle" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="btn btn-outline-light btn-sm ms-2" id="loginBtn">Login</button>
+                <button class="btn btn-outline-light btn-sm ms-2" id="logoutBtn" style="display: none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login/Register Modal -->
+    <div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="authModalLabel">Welcome to JanSeva</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Login Form -->
+                    <div id="loginForm">
+                        <h6 class="text-center mb-3">Login to Your Account</h6>
+                        <form id="loginFormElement">
+                            <div class="mb-3">
+                                <label for="loginUsername" class="form-label">Username or Email</label>
+                                <input type="text" class="form-control" id="loginUsername" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Login</button>
+                            </div>
+                        </form>
+                        <div class="text-center mt-3">
+                            <small>Don't have an account? <a href="#" id="showRegister">Register here</a></small>
+                        </div>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="registerForm" style="display: none;">
+                        <h6 class="text-center mb-3">Create New Account</h6>
+                        <form id="registerFormElement">
+                            <div class="mb-3">
+                                <label for="registerUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="registerUsername" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="registerEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="registerEmail" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="registerRole" class="form-label">Role</label>
+                                <select class="form-select" id="registerRole">
+                                    <option value="citizen">Citizen</option>
+                                    <option value="official">Government Official</option>
+                                    <option value="volunteer">Volunteer</option>
+                                </select>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">Register</button>
+                            </div>
+                        </form>
+                        <div class="text-center mt-3">
+                            <small>Already have an account? <a href="#" id="showLogin">Login here</a></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3><i class="fas fa-map-marked-alt"></i> Issue Heatmap</h3>
+                    <div class="filter-section">
+                        <select class="form-select form-select-sm" id="filterStatus" style="width: auto;">
+                            <option value="">All Status</option>
+                            <option value="OPEN">Open</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="RESOLVED">Resolved</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="map" class="border rounded"></div>
+            </div>
+            <div class="col-md-4">
+                <!-- User Stats Card -->
+                <div class="stats-card" id="userStats" style="display: none;">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stats-number" id="totalReports">0</div>
+                            <small>Reports</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="stats-number" id="totalPoints">0</div>
+                            <small>Points</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="stats-number" id="userRank">-</div>
+                            <small>Rank</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Complaint Form -->
+                <div class="card" id="complaintCard">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-plus-circle"></i> File a New Complaint</h5>
+                        <div id="loginPrompt" class="text-center py-4">
+                            <i class="fas fa-sign-in-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Please login to report an issue</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#authModal">Login Now</button>
+                        </div>
+                        <form id="complaintForm" style="display: none;">
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" rows="3" required placeholder="Describe the issue in detail..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="photo" class="form-label">Upload Photo</label>
+                                <input class="form-control" type="file" id="photo" accept="image/*" required>
+                                <small class="text-muted">Upload a clear photo of the issue</small>
+                            </div>
+                            <input type="hidden" id="latitude">
+                            <input type="hidden" id="longitude">
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success" id="submitBtn">
+                                    <i class="fas fa-paper-plane"></i> Report Issue
+                                </button>
+                            </div>
+                            <div class="alert alert-info mt-2" id="locationStatus">
+                                <i class="fas fa-map-marker-alt"></i> Getting your location...
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Recent Complaints List -->
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="fas fa-list"></i> Recent Reports</h6>
+                        <div id="recentComplaints" class="mt-3">
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-spinner fa-spin"></i> Loading complaints...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCD-24B04aO6cFngr0ztZ5GH0XB8KQ98-A&callback=initMap" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let map;
+        let userMarker;
+        let currentUser = null;
+        const backendUrl = 'http://localhost:8080'; // Your Spring Boot backend URL
+
+        // User authentication functions
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.insertBefore(alertDiv, document.body.firstChild);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        function updateUserInterface(user) {
+            currentUser = user;
+            
+            // Update navbar
+            document.getElementById('welcomeText').textContent = `Welcome, ${user.username}`;
+            document.getElementById('userPoints').textContent = `${user.points} pts`;
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'inline-block';
+            
+            // Update complaint form
+            document.getElementById('loginPrompt').style.display = 'none';
+            document.getElementById('complaintForm').style.display = 'block';
+            
+            // Update user stats
+            document.getElementById('totalPoints').textContent = user.points;
+            document.getElementById('userStats').style.display = 'block';
+            
+            // Hide modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+            if (modal) modal.hide();
+            
+            showAlert(`Welcome back, ${user.username}! You have ${user.points} points.`, 'success');
+        }
+
+        function logout() {
+            currentUser = null;
+            
+            // Reset navbar
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('loginBtn').style.display = 'inline-block';
+            document.getElementById('logoutBtn').style.display = 'none';
+            
+            // Reset complaint form
+            document.getElementById('loginPrompt').style.display = 'block';
+            document.getElementById('complaintForm').style.display = 'none';
+            
+            // Reset user stats
+            document.getElementById('userStats').style.display = 'none';
+            
+            showAlert('Logged out successfully!', 'info');
+        }
+
+        // Event listeners for authentication
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login form
+            document.getElementById('loginFormElement').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('loginUsername').value;
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Logging in...';
+                
+                try {
+                    const response = await fetch(`${backendUrl}/api/users/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        updateUserInterface(result);
+                    } else {
+                        showAlert(result.error || 'Login failed', 'danger');
+                    }
+                } catch (error) {
+                    showAlert('Login failed: ' + error.message, 'danger');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Login';
+                }
+            });
+            
+            // Register form
+            document.getElementById('registerFormElement').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('registerUsername').value;
+                const email = document.getElementById('registerEmail').value;
+                const role = document.getElementById('registerRole').value;
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Registering...';
+                
+                try {
+                    const response = await fetch(`${backendUrl}/api/users/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, email, role })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        showAlert('Registration successful! You can now login.', 'success');
+                        showLoginForm();
+                        document.getElementById('loginUsername').value = username;
+                    } else {
+                        showAlert(result.error || 'Registration failed', 'danger');
+                    }
+                } catch (error) {
+                    showAlert('Registration failed: ' + error.message, 'danger');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Register';
+                }
+            });
+            
+            // Modal form switching
+            document.getElementById('showRegister').addEventListener('click', function(e) {
+                e.preventDefault();
+                showRegisterForm();
+            });
+            
+            document.getElementById('showLogin').addEventListener('click', function(e) {
+                e.preventDefault();
+                showLoginForm();
+            });
+            
+            // Login button
+            document.getElementById('loginBtn').addEventListener('click', function() {
+                showLoginForm();
+            });
+            
+            // Logout button
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        });
+
+        // 1. Initialize the map
+        function initMap() {
+            const chennai = { lat: 13.0827, lng: 80.2707 };
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12,
+                center: chennai
+            });
+
+            // Get user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    document.getElementById('latitude').value = pos.lat;
+                    document.getElementById('longitude').value = pos.lng;
+                    document.getElementById('locationStatus').textContent = '✅ Location found!';
+                    document.getElementById('locationStatus').classList.replace('alert-info', 'alert-success');
+
+                    userMarker = new google.maps.Marker({
+                        position: pos,
+                        map: map,
+                        title: "Your Location"
+                    });
+                    map.setCenter(pos);
+                }, () => {
+                    handleLocationError(true, map.getCenter());
+                });
+            } else {
+                handleLocationError(false, map.getCenter());
+            }
+
+            loadComplaints();
+        }
+
+        function handleLocationError(browserHasGeolocation, pos) {
+             document.getElementById('locationStatus').textContent = browserHasGeolocation ?
+                                    'Error: The Geolocation service failed.' :
+                                    'Error: Your browser does not support geolocation.';
+            document.getElementById('locationStatus').classList.replace('alert-info', 'alert-danger');
+        }
+
+        // 2. Load existing complaints from the backend
+        async function loadComplaints() {
+            try {
+                console.log('Loading complaints from:', `${backendUrl}/api/complaints`);
+                const response = await fetch(`${backendUrl}/api/complaints`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
+                    throw new Error(`Server responded with ${response.status}: ${errorText}`);
+                }
+                
+                const complaints = await response.json();
+                console.log('Loaded complaints:', complaints);
+
+                if (complaints.length === 0) {
+                    console.log('No complaints found in database');
+                    return;
+                }
+
+                complaints.forEach(c => {
+                    const iconColor = getMarkerColor(c.issueType);
+                    const marker = new google.maps.Marker({
+                        position: { lat: c.latitude, lng: c.longitude },
+                        map: map,
+                        title: `Type: ${c.issueType}\nStatus: ${c.status}`,
+                        icon: {
+                            url: `http://maps.google.com/mapfiles/ms/icons/${iconColor}-dot.png`
+                        }
+                    });
+
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `<h6>${c.issueType.replace('_', ' ')}</h6>
+                                  <p>${c.description}</p>
+                                  <p>Status: <strong>${c.status}</strong></p>
+                                  ${c.photoUrl ? `<img src="${c.photoUrl}" width="150px" alt="Issue Photo"/>` : ''}`
+                    });
+
+                    marker.addListener('click', () => {
+                        infoWindow.open(map, marker);
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading complaints:', error);
+                alert('Could not load complaints from the server. Check console for details.');
+            }
+        }
+        
+        function getMarkerColor(issueType) {
+            switch(issueType) {
+                case 'POTHOLE': return 'red';
+                case 'GARBAGE_DUMP': return 'green';
+                case 'BROKEN_STREETLIGHT': return 'yellow';
+                case 'WATER_LOGGING': return 'blue';
+                default: return 'purple';
+            }
+        }
+
+        // 3. Handle the form submission
+        document.getElementById('complaintForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            if (!currentUser) {
+                showAlert('Please login to submit a complaint', 'warning');
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+            const formData = new FormData();
+            formData.append('description', document.getElementById('description').value);
+            formData.append('latitude', document.getElementById('latitude').value);
+            formData.append('longitude', document.getElementById('longitude').value);
+            formData.append('photo', document.getElementById('photo').files[0]);
+            formData.append('username', currentUser.username);
+
+            try {
+                const response = await fetch(`${backendUrl}/api/complaints`, {
+                    method: 'POST',
+                    body: formData // No Content-Type header needed, browser sets it for FormData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || `Server responded with ${response.status}`);
+                }
+
+                showAlert('Complaint submitted successfully! You earned 10 points! 🎉', 'success');
+                
+                // Update user points display
+                currentUser.points += 10;
+                document.getElementById('userPoints').textContent = `${currentUser.points} pts`;
+                document.getElementById('totalPoints').textContent = currentUser.points;
+                
+                // Clear form
+                document.getElementById('description').value = '';
+                document.getElementById('photo').value = '';
+                
+                // Reload complaints to show the new one
+                loadComplaints();
+
+            } catch (error) {
+                console.error('Error submitting complaint:', error);
+                showAlert('Failed to submit complaint: ' + error.message, 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Report Issue';
+            }
+        });
+    </script>
+</body>
+</html>
